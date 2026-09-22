@@ -10,36 +10,20 @@
 
 <body>
     <script>
-        const waitConnect = (conn) => new Promise((resolve, reject) => {
-            const success = () => { cleanup(); resolve(); };
-            const failure = (err) => { cleanup(); reject(err); };
-            const cleanup = () => {
-                conn.off("open", success);
-                conn.off("error", failure);
-            };
-            conn.once("open", success);
-            conn.once("error", failure);
-        });
-
         async function main() { //awaitを使うため async 付きで関数として以下全ての処理を定義
             const peer = new Peer() //オンライン接続準備
             const myPeerID = await new Promise(resolve => peer.once("open", resolve)) //自ID取得 イベントリスナーは非同期処理なのでawaitで無理やり同期
 
+            let connection            
             const isHost = confirm("あなたはホストですか？ はい→OK いいえ→キャンセル")
             if (isHost) {
                 alert(`あなたのPeerIDは ${myPeerID} です。\nクライアント側でこのIDを入力してください。`)
-                const connection = await new Promise(resolve => peer.once("connection", resolve))
-                await waitConnect(connection)
-                alert("クライアントとの接続が確立されました。")
+                connection = await new Promise(resolve => peer.once("connection", resolve))
+                await new Promise(resolve => connection.once("open", resolve))
             } else {
                 const partnerId = prompt("あなたはクライアントです。\nホストから提示されたPeerIDを入力してください。")
-                const connection = peer.connect(partnerId)
-                try {
-                    await waitConnect(connection);
-                    alert("ホストとの接続が確立されました。");
-                } catch (error) {
-                    console.error("通信エラーが発生しました:", error);
-                }
+                connection = peer.connect(partnerId)
+                await new Promise(resolve => connection.once("open", resolve))
             }
 
             var number = Math.floor(Math.random() * 101) //0から100までのランダムな整数を答えに
