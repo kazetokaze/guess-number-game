@@ -20,10 +20,12 @@
                 alert(`あなたのPeerIDは ${myPeerID} です。\nクライアント側でこのIDを入力してください。`)
                 connection = await new Promise(resolve => peer.once("connection", resolve))
                 await new Promise(resolve => connection.once("open", resolve))
+                alert("クライアントとの接続が確立されました。")
             } else {
                 const partnerId = prompt("あなたはクライアントです。\nホストから提示されたPeerIDを入力してください。")
                 connection = peer.connect(partnerId)
                 await new Promise(resolve => connection.once("open", resolve))
+                alert("ホストとの接続が確立されました。")
             }
 
             var number = Math.floor(Math.random() * 101) //0から100までのランダムな整数を答えに
