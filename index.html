@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <title>Sample4</title>
+    <!--P2Pによる双方向通信ライブラリ、peer.js読み込み-->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+
+<body>
+    <script>
+        const waitConnect = (conn) => new Promise((resolve, reject) => {
+            const success = () => { cleanup(); resolve(); };
+            const failure = (err) => { cleanup(); reject(err); };
+            const cleanup = () => {
+                conn.off("open", success);
+                conn.off("error", failure);
+            };
+            conn.once("open", success);
+            conn.once("error", failure);
+        });
+
+        async function main() { //awaitを使うため async 付きで関数として以下全ての処理を定義
+            const peer = new Peer() //オンライン接続準備
+            const myPeerID = await new Promise(resolve => peer.once("open", resolve)) //自ID取得 イベントリスナーは非同期処理なのでawaitで無理やり同期
+
+            const isHost = confirm("あなたはホストですか？ はい→OK いいえ→キャンセル")
+            if (isHost) {
+                alert(`あなたのPeerIDは ${myPeerID} です。\nクライアント側でこのIDを入力してください。`)
+                const connection = await new Promise(resolve => peer.once("connection", resolve))
+                await waitConnect(connection)
+                alert("クライアントとの接続が確立されました。")
+            } else {
+                const partnerId = prompt("あなたはクライアントです。\nホストから提示されたPeerIDを入力してください。")
+                const connection = peer.connect(partnerId)
+                try {
+                    await waitConnect(connection);
+                    alert("ホストとの接続が確立されました。");
+                } catch (error) {
+                    console.error("通信エラーが発生しました:", error);
+                }
+            }
+
+            var number = Math.floor(Math.random() * 101) //0から100までのランダムな整数を答えに
+            let answer //再代入可能変数を事前に宣言
+            let errorMessage
+            var turn = 1
+
+            const startTime = Date.now()
+            while (answer != number) { //無限ループ !==を使わないことで文字列の回答を数字として処理
+                answer = prompt(`${errorMessage ? `${errorMessage}\n` : ""}現在${turn}ターン目です`) //エラーがあった時のみターン数と合わせてエラー内容も表示する
+                if (answer === null || answer.trim() === "") { //別のページ閲覧中などに空入力が繰り返され勝手にターン数が進む現象を修正
+                    continue
+                } else if (isNaN(Number(answer))) { //文字などの入力はターン数を進めない
+                    errorMessage = "半角数字を答えてください"
+                    continue
+                } else if (answer < 0 || answer > 100) { //範囲外の入力はターン数を進めない
+                    errorMessage = "0から100までの数字を答えてください"
+                    continue
+                } else if (!Number.isInteger(Number(answer))) { //少数の入力はターン数を進めない
+                    errorMessage = "整数を答えてください"
+                    continue
+                } else if (answer == number) {
+                    alert("あたり!")
+                } else if (Math.abs(number - answer) <= 5) { //答えが近ければおしい、遠ければ入力値が答えより大きいか小さいかを教える
+                    alert("おしい!")
+                } else if (answer < number) {
+                    alert("答えより小さい!")
+                } else if (answer > number) {
+                    alert("答えより大きい!")
+                } else { //例外が起きた時はターン数を進めない
+                    errorMessage = "0から100までの整数で答えてください"
+                    continue
+                }
+                errorMessage = null //問題がなければエラーは出さない
+                turn++
+            }
+            const endTime = Date.now()
+            const deltaTime = (endTime - startTime) / 1000
+        }
+        main()
+    </script>
+</body>
+
+</html>
