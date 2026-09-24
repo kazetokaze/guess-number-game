@@ -22,25 +22,32 @@
                 connection = await new Promise(resolve => peer.once("connection", resolve))
                 await new Promise(resolve => connection.once("open", resolve))
                 alert("クライアントとの接続が確立されました。\nゲームを開始します。")
+
                 const hostTime = game()
                 const clientTime = await new Promise(resolve => connection.once("data", resolve))
+
+                const win = "あなたの勝ちです。"
+                const draw = "引き分けです。"
+                const loss = "あなたの負けです。"
                 if (hostTime < clientTime) {
-                    alert("あなたの勝ちです。")
-                    connection.send("あなたの負けです。")
+                    connection.send(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${win}`)
+                    alert(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${loss}`)
                 } else if (hostTime == clientTime) {
-                    alert("引き分けです。")
-                    connection.send("引き分けです。")
+                    connection.send(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${draw}`)
+                    alert(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${draw}`)
                 } else {
-                    alert("あなたの負けです。")
-                    connection.send("あなたの勝ちです。")
+                    connection.send(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${loss}`)
+                    alert(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${win}`)
                 }
             } else {
                 const partnerId = prompt("あなたはクライアントです。\nホストから提示されたPeerIDを入力してください。")
                 connection = peer.connect(partnerId)
                 await new Promise(resolve => connection.once("open", resolve))
                 alert("ホストとの接続が確立されました。\nゲームを開始します。")
+
                 const resultTime = game()
-                connection.send(resultTime);
+                connection.send(resultTime)
+
                 const result = await new Promise(resolve => connection.once("data", resolve))
                 alert(result)
             }
