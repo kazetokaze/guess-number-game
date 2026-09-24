@@ -29,16 +29,20 @@
                 const win = "あなたの勝ちです。"
                 const draw = "引き分けです。"
                 const loss = "あなたの負けです。"
+                let hostResult
+                let clientResult
                 if (hostTime < clientTime) {
-                    connection.send(`相手：${hostTime}秒\nあなた：${clientTime}秒\n${loss}`)
-                    alert(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${win}`)
+                    hostResult=`相手：${clientTime}秒\nあなた：${hostTime}秒\n${win}`
+                    clientResult=`相手：${hostTime}秒\nあなた：${clientTime}秒\n${loss}`
                 } else if (hostTime == clientTime) {
-                    connection.send(`相手：${hostTime}秒\nあなた：${clientTime}秒\n${draw}`)
-                    alert(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${draw}`)
+                    hostResult=`相手：${clientTime}秒\nあなた：${hostTime}秒\n${draw}`
+                    clientResult=`相手：${hostTime}秒\nあなた：${clientTime}秒\n${draw}`
                 } else {
-                    connection.send(`相手：${hostTime}秒\nあなた：${clientTime}秒\n${win}`)
-                    alert(`相手：${clientTime}秒\nあなた：${hostTime}秒\n${loss}`)
+                    hostResult=`相手：${clientTime}秒\nあなた：${hostTime}秒\n${loss}`
+                    clientResult=`相手：${hostTime}秒\nあなた：${clientTime}秒\n${win}`
                 }
+                connection.send(clientResult)
+                setTimeout(() => { alert(hostResult) }, 50) //クライアントへの結果送信が終わるまで50ms待ってから結果を表示
             } else {
                 const partnerId = prompt("あなたはクライアントです。\nホストから提示されたPeerIDを入力してください。")
                 connection = peer.connect(partnerId)
