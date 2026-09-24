@@ -14,26 +14,46 @@
             const peer = new Peer() //オンライン接続準備
             const myPeerID = await new Promise(resolve => peer.once("open", resolve)) //自ID取得 イベントリスナーは非同期処理なのでawaitで無理やり同期
 
-            let connection            
+            let connection
+            let message
             const isHost = confirm("あなたはホストですか？ はい→OK いいえ→キャンセル")
             if (isHost) {
                 alert(`あなたのPeerIDは ${myPeerID} です。\nクライアント側でこのIDを入力してください。`)
                 connection = await new Promise(resolve => peer.once("connection", resolve))
                 await new Promise(resolve => connection.once("open", resolve))
-                alert("クライアントとの接続が確立されました。")
+                alert("クライアントとの接続が確立されました。\nゲームを開始します。")
+                const hostTime = game()
+                const clientTime = await new Promise(resolve => connection.once("data", resolve))
+                if (hostTime < clientTime) {
+                    alert("あなたの勝ちです。")
+                    connection.send("あなたの負けです。")
+                } else if (hostTime == clientTime) {
+                    alert("引き分けです。")
+                    connection.send("引き分けです。")
+                } else {
+                    alert("あなたの負けです。")
+                    connection.send("あなたの勝ちです。")
+                }
             } else {
                 const partnerId = prompt("あなたはクライアントです。\nホストから提示されたPeerIDを入力してください。")
                 connection = peer.connect(partnerId)
                 await new Promise(resolve => connection.once("open", resolve))
-                alert("ホストとの接続が確立されました。")
+                alert("ホストとの接続が確立されました。\nゲームを開始します。")
+                const resultTime = game()
+                connection.send(resultTime);
+                const result = await new Promise(resolve => connection.once("data", resolve))
+                alert(result)
             }
+        }
 
+        function game() {
             var number = Math.floor(Math.random() * 101) //0から100までのランダムな整数を答えに
             let answer //再代入可能変数を事前に宣言
             let errorMessage
             var turn = 1
 
             const startTime = Date.now()
+
             while (answer != number) { //無限ループ !==を使わないことで文字列の回答を数字として処理
                 answer = prompt(`${errorMessage ? `${errorMessage}\n` : ""}現在${turn}ターン目です`) //エラーがあった時のみターン数と合わせてエラー内容も表示する
                 if (answer === null || answer.trim() === "") { //別のページ閲覧中などに空入力が繰り返され勝手にターン数が進む現象を修正
@@ -62,8 +82,11 @@
                 errorMessage = null //問題がなければエラーは出さない
                 turn++
             }
+
             const endTime = Date.now()
             const deltaTime = (endTime - startTime) / 1000
+
+            return deltaTime
         }
         main()
     </script>
